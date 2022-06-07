@@ -41,6 +41,14 @@ extern void sys_arch_reboot(int type);
 
 // Intercept zephyr/kernel/fatal.c:z_fatal_error()
 void __wrap_z_fatal_error(unsigned int reason, const z_arch_esf_t *esf);
+extern void __real_z_fatal_error(unsigned int reason, const z_arch_esf_t *esf);
+
+// This struct stores the crash info for later passing to __real_z_fatal_error
+static struct save_crash_info {
+  bool valid;
+  unsigned int reason;
+  z_arch_esf_t esf;
+} s_save_crash_info;
 
 void __wrap_z_fatal_error(unsigned int reason, const z_arch_esf_t *esf) {
   const struct __extra_esf_info *extra_info = &esf->extra_info;
@@ -61,6 +69,12 @@ void __wrap_z_fatal_error(unsigned int reason, const z_arch_esf_t *esf) {
     .r11 = callee_regs->v8,
     .exc_return = exc_return ,
   };
+
+  // stash the reason and esf for later use by zephyr unwinder
+  s_save_crash_info.valid = true;
+  s_save_crash_info.reason = reason;
+  s_save_crash_info.esf = *esf;
+
   memfault_fault_handler(&reg, kMfltRebootReason_HardFault);
 }
 
@@ -68,6 +82,11 @@ MEMFAULT_WEAK
 MEMFAULT_NORETURN
 void memfault_platform_reboot(void) {
   memfault_platform_halt_if_debugging();
+
+  if (s_save_crash_info.valid){
+  __real_z_fatal_error(s_save_crash_info.reason, &s_save_crash_info.esf);
+  }
+
   sys_arch_reboot(0);
   CODE_UNREACHABLE;
 }
