@@ -100,4 +100,4 @@ static int prv_init_and_log_reboot() {
   return 0;
 }
 
-SYS_INIT(prv_init_and_log_reboot, APPLICATION, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT);
+SYS_INIT(prv_init_and_log_reboot, POST_KERNEL, CONFIG_KERNEL_INIT_PRIORITY_DEFAULT);
