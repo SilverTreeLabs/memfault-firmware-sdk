@@ -101,10 +101,10 @@ void memfault_zephyr_z_fatal_error(void) {
 MEMFAULT_WEAK
 MEMFAULT_NORETURN
 void memfault_platform_reboot(void) {
-  memfault_platform_halt_if_debugging();
+    // memfault_platform_halt_if_debugging();
 
-  memfault_zephyr_z_fatal_error();
+    // memfault_zephyr_z_fatal_error();
 
-  sys_arch_reboot(0);
-  CODE_UNREACHABLE;
+    sys_arch_reboot(0);
+    CODE_UNREACHABLE;
 }
